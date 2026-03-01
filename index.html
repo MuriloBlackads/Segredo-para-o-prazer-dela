@@ -123,10 +123,10 @@
                           top: 0; left: 0;
                           width: 100%;
                           height: calc(100% - 10px);
-                          z-index: 10;
+                          z-index: 40; /* High z-index to be above video */
                           display: none;
                           cursor: pointer;
-                          background: rgba(0,0,0,0.85); /* Semi-transparent preventing total black screen */
+                          background: rgba(0,0,0,0.85);
                         }
                         .pause-overlay.active {
                           display: flex;
@@ -373,7 +373,11 @@
                                var unmuteO = document.getElementById('centerUnmuteOverlay');
 
                                if (loader && loader.classList.contains('active')) loader.classList.remove('active');
-                               if (pauseO && pauseO.classList.contains('active')) pauseO.classList.remove('active');
+                               
+                               // Só esconde o overlay de pausa se o vídeo estiver rodando DE FATO
+                               if (video.state() === "playing" && pauseO && pauseO.classList.contains('active')) {
+                                   pauseO.classList.remove('active');
+                               }
                                
                                // Só esconde o unmute se o som já tiver começado ou se o vídeo desmudar
                                if (hasStartedSound || !video.isMuted()) {
@@ -404,11 +408,10 @@
 
                              // Pause event 
                              video.bind("pause", function() {
-                               // Só mostra o overlay de pausa se NÃO estiver carregando e já tiver áudio
-                               if (hasStartedSound && video.state() === "paused") {
-                                 document.getElementById('pauseOverlay').classList.add('active');
-                                 stopFakeBar();
-                               }
+                               // Mostra o overlay de pausa sempre que pausar (sem restrições)
+                               var pOverlay = document.getElementById('pauseOverlay');
+                               if (pOverlay) pOverlay.classList.add('active');
+                               stopFakeBar();
                              });
 
                              // Buffering events
