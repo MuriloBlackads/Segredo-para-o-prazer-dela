@@ -183,6 +183,7 @@
                           align-items: center;
                           justify-content: center;
                           background: rgba(0,0,0,0.5);
+                          pointer-events: none; /* Never block user clicks */
                         }
                         .vsl-loading.active { display: flex; }
                         .vsl-spinner {
@@ -342,6 +343,9 @@
 
                             // Time update event para checar o delay
                             video.bind("timechange", function(t) {
+                              // If time is moving, hide any stuck loader
+                              document.getElementById('vslLoading').classList.remove('active');
+
                               if (!buttonRevealed && t >= delayTimeSeconds) {
                                 var btnContainer = document.getElementById('vslBuyButtonContainer');
                                 btnContainer.style.display = 'flex';
