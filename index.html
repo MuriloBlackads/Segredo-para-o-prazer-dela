@@ -339,57 +339,93 @@
                         _wq.push({ 
                           id: "14x4ao7uue", 
                           onReady: function(video) {
-                            wistiaPlayer = video;
+                             var lastTime = -1;
+                             var lastMoveTime = Date.now();
+                             var watchdogInterval;
 
-                            // Time update event para checar o delay
-                            video.bind("timechange", function(t) {
-                              // If time is moving, hide any stuck loader
-                              document.getElementById('vslLoading').classList.remove('active');
+                             // WATCHDOG: Restart video if it stays stuck for too long while in 'playing' state
+                             function startWatchdog() {
+                               if (watchdogInterval) clearInterval(watchdogInterval);
+                               watchdogInterval = setInterval(function() {
+                                 var state = video.state();
+                                 if (state === "playing") {
+                                   var currentTime = video.time();
+                                   if (currentTime === lastTime) {
+                                     if (Date.now() - lastMoveTime > 5000) { // 5 segundos parado
+                                       console.log("VSL Watchdog: Detectado travamento. Reiniciando...");
+                                       video.play();
+                                       lastMoveTime = Date.now();
+                                     }
+                                   } else {
+                                     lastTime = currentTime;
+                                     lastMoveTime = Date.now();
+                                   }
+                                 }
+                               }, 2000);
+                             }
 
-                              if (!buttonRevealed && t >= delayTimeSeconds) {
-                                var btnContainer = document.getElementById('vslBuyButtonContainer');
-                                btnContainer.style.display = 'flex';
-                                // Rolar suavemente para o botão
-                                btnContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                buttonRevealed = true;
-                              }
-                            });
+                             // Time update event - THE MOST IMPORTANT
+                             video.bind("timechange", function(t) {
+                               // Se o tempo está correndo, NADA deve estar na frente do vídeo
+                               var loader = document.getElementById('vslLoading');
+                               var pauseO = document.getElementById('pauseOverlay');
+                               var unmuteO = document.getElementById('centerUnmuteOverlay');
 
-                            // Play event
-                            video.bind("play", function() {
-                              document.getElementById('pauseOverlay').classList.remove('active');
-                              document.getElementById('vslLoading').classList.remove('active');
-                              startFakeBar();
-                              
-                              if (!video.isMuted()) {
-                                document.getElementById('centerUnmuteOverlay').style.display = 'none';
-                                hasStartedSound = true;
-                              }
-                            });
+                               if (loader && loader.classList.contains('active')) loader.classList.remove('active');
+                               if (pauseO && pauseO.classList.contains('active')) pauseO.classList.remove('active');
+                               
+                               // Só esconde o unmute se o som já tiver começado ou se o vídeo desmudar
+                               if (hasStartedSound || !video.isMuted()) {
+                                 if (unmuteO) unmuteO.style.display = 'none';
+                               }
 
-                            // Pause event (trigger overlay)
-                            video.bind("pause", function() {
-                              if (hasStartedSound && video.state() !== "ended") {
-                                document.getElementById('pauseOverlay').classList.add('active');
-                                stopFakeBar();
-                              }
-                            });
+                               // Checagem de Delay do Botão
+                               if (!buttonRevealed && t >= delayTimeSeconds) {
+                                 var btnContainer = document.getElementById('vslBuyButtonContainer');
+                                 btnContainer.style.display = 'flex';
+                                 btnContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                 buttonRevealed = true;
+                               }
+                             });
 
-                            // Buffering events
-                            video.bind("waiting", function() {
-                              document.getElementById('vslLoading').classList.add('active');
-                            });
+                             // Play event
+                             video.bind("play", function() {
+                               document.getElementById('pauseOverlay').classList.remove('active');
+                               document.getElementById('vslLoading').classList.remove('active');
+                               startFakeBar();
+                               startWatchdog();
+                               
+                               if (!video.isMuted()) {
+                                 document.getElementById('centerUnmuteOverlay').style.display = 'none';
+                                 hasStartedSound = true;
+                               }
+                             });
 
-                            video.bind("playing", function() {
-                              document.getElementById('vslLoading').classList.remove('active');
-                              document.getElementById('pauseOverlay').classList.remove('active');
-                            });
+                             // Pause event 
+                             video.bind("pause", function() {
+                               // Só mostra o overlay de pausa se NÃO estiver carregando e já tiver áudio
+                               if (hasStartedSound && video.state() === "paused") {
+                                 document.getElementById('pauseOverlay').classList.add('active');
+                                 stopFakeBar();
+                               }
+                             });
 
-                            // Ended event
-                            video.bind("end", function() {
-                              stopFakeBar();
-                              document.getElementById('fakeProgressFill').style.width = '100%';
-                            });
+                             // Buffering events
+                             video.bind("waiting", function() {
+                               document.getElementById('vslLoading').classList.add('active');
+                             });
+
+                             video.bind("playing", function() {
+                               document.getElementById('vslLoading').classList.remove('active');
+                               document.getElementById('pauseOverlay').classList.remove('active');
+                             });
+
+                             // Ended event
+                             video.bind("end", function() {
+                               stopFakeBar();
+                               if (watchdogInterval) clearInterval(watchdogInterval);
+                               document.getElementById('fakeProgressFill').style.width = '100%';
+                             });
                           }
                         });
 
