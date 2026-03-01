@@ -239,8 +239,8 @@
                              <div class="resume-modal-title">CONTINUAR ASSISTINDO?</div>
                              <div class="resume-modal-text">Detectamos que você já começou a ver este vídeo. De onde deseja continuar?</div>
                              <div class="resume-buttons">
-                               <button class="resume-btn resume-btn-continue" onclick="resumeFromLastTime()">CONTINUAR DE ONDE PAREI</button>
-                               <button class="resume-btn resume-btn-restart" onclick="restartVideo()">ASSISTIR DO COMEÇO</button>
+                               <button class="resume-btn resume-btn-continue" onclick="resumeFromLastTime(event)">CONTINUAR DE ONDE PAREI</button>
+                               <button class="resume-btn resume-btn-restart" onclick="restartVideo(event)">ASSISTIR DO COMEÇO</button>
                              </div>
                            </div>
                          </div>
@@ -323,7 +323,7 @@
                                 }
                               }
                             </style>
-                            <div class="center-unmute-overlay" id="centerUnmuteOverlay" onclick="unmuteWistia()">
+                            <div class="center-unmute-overlay" id="centerUnmuteOverlay" onclick="unmuteWistia(event)">
                               <div class="center-unmute-text">
                                 <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
                                 🔊 TOQUE PARA OUVIR
@@ -496,7 +496,8 @@
                           }
                         });
 
-                        function unmuteWistia() {
+                        function unmuteWistia(e) {
+                          if (e) e.stopPropagation();
                           if (wistiaPlayer) {
                             wistiaPlayer.unmute();
                             wistiaPlayer.play(); // Ensure it stays playing
@@ -515,7 +516,8 @@
                            }
                         }
 
-                        function resumeFromLastTime() {
+                        function resumeFromLastTime(e) {
+                           if (e) e.stopPropagation();
                            var savedTime = localStorage.getItem('vsl_time_14x4ao7uue');
                            if (wistiaPlayer && savedTime) {
                                wistiaPlayer.time(parseFloat(savedTime));
@@ -524,7 +526,8 @@
                            document.getElementById('resumeModal').style.display = 'none';
                         }
 
-                        function restartVideo() {
+                        function restartVideo(e) {
+                           if (e) e.stopPropagation();
                            if (wistiaPlayer) {
                                wistiaPlayer.time(0);
                                wistiaPlayer.play();
