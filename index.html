@@ -123,7 +123,7 @@
                           top: 0; left: 0;
                           width: 100%;
                           height: calc(100% - 10px);
-                          z-index: 40; /* High z-index to be above video */
+                          z-index: 90; /* High z-index to be above video */
                           display: none;
                           cursor: pointer;
                           background: rgba(0,0,0,0.85);
@@ -138,6 +138,40 @@
                           height: 100%;
                           object-fit: cover;
                         }
+
+                        /* === Resume Modal === */
+                        .resume-modal {
+                          position: fixed;
+                          top: 0; left: 0;
+                          width: 100%; height: 100%;
+                          background: rgba(0,0,0,0.9);
+                          z-index: 100;
+                          display: none;
+                          align-items: center;
+                          justify-content: center;
+                          padding: 20px;
+                          backdrop-filter: blur(5px);
+                        }
+                        .resume-modal-content {
+                          background: #1c191c;
+                          border: 1px solid rgba(255,255,255,0.1);
+                          border-radius: 12px;
+                          padding: 30px;
+                          max-width: 400px;
+                          width: 100%;
+                          text-align: center;
+                          color: white;
+                          font-family: Montserrat, sans-serif;
+                          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                        }
+                        .resume-modal-title { font-size: 20px; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; }
+                        .resume-modal-text { font-size: 16px; margin-bottom: 25px; color: #ccc; }
+                        .resume-buttons { display: flex; flex-direction: column; gap: 10px; }
+                        .resume-btn {
+                          padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; font-size: 14px;
+                        }
+                        .resume-btn-continue { background: #CC1212; color: white; }
+                        .resume-btn-restart { background: rgba(255,255,255,0.1); color: white; }
 
                         /* === Click-to-Play Initial Overlay === */
                         .play-initial-overlay {
@@ -199,6 +233,17 @@
                       </style>
 
                       <div class="vsl-player-wrapper">
+                         <!-- Resume Modal -->
+                         <div class="resume-modal" id="resumeModal">
+                           <div class="resume-modal-content">
+                             <div class="resume-modal-title">CONTINUAR ASSISTINDO?</div>
+                             <div class="resume-modal-text">Detectamos que você já começou a ver este vídeo. De onde deseja continuar?</div>
+                             <div class="resume-buttons">
+                               <button class="resume-btn resume-btn-continue" onclick="resumeFromLastTime()">CONTINUAR DE ONDE PAREI</button>
+                               <button class="resume-btn resume-btn-restart" onclick="restartVideo()">ASSISTIR DO COMEÇO</button>
+                             </div>
+                           </div>
+                         </div>
                         <!-- Loading Spinner -->
                         <div class="vsl-loading" id="vslLoading">
                           <div class="vsl-spinner"></div>
@@ -211,7 +256,7 @@
 
                         <!-- Video Player (Wistia) -->
                         <!-- Video Player (Wistia Standard Inline) -->
-                        <div class="video-container">
+                        <div class="video-container" onclick="togglePlayPause()">
                           <script src="https://fast.wistia.com/embed/medias/14x4ao7uue.jsonp" async></script>
                           <script src="https://fast.wistia.com/assets/external/E-v1.js" async></script>
                           
@@ -340,6 +385,18 @@
                           id: "14x4ao7uue", 
                           onReady: function(video) {
                              wistiaPlayer = video;
+                             
+                             // Check for saved time
+                             var savedTime = localStorage.getItem('vsl_time_14x4ao7uue');
+                             if (savedTime && parseFloat(savedTime) > 10) {
+                               document.getElementById('resumeModal').style.display = 'flex';
+                               // Auto-hide modal after 10s if user doesn't interact
+                               setTimeout(function(){
+                                   var rModal = document.getElementById('resumeModal');
+                                   if (rModal) rModal.style.display = 'none';
+                               }, 10000);
+                             }
+                             
                              var lastTime = -1;
                              var lastMoveTime = Date.now();
                              var watchdogInterval;
@@ -351,6 +408,12 @@
                                  var state = video.state();
                                  if (state === "playing") {
                                    var currentTime = video.time();
+                                   
+                                   // Save progress
+                                   if (currentTime > 0) {
+                                      localStorage.setItem('vsl_time_14x4ao7uue', currentTime);
+                                   }
+
                                    if (currentTime === lastTime) {
                                      if (Date.now() - lastMoveTime > 5000) { // 5 segundos parado
                                        console.log("VSL Watchdog: Detectado travamento. Reiniciando...");
@@ -440,6 +503,34 @@
                             document.getElementById('centerUnmuteOverlay').style.display = 'none';
                             hasStartedSound = true;
                           }
+                        }
+
+                        function togglePlayPause() {
+                           if (wistiaPlayer) {
+                               if (wistiaPlayer.state() === "playing") {
+                                   wistiaPlayer.pause();
+                               } else {
+                                   wistiaPlayer.play();
+                               }
+                           }
+                        }
+
+                        function resumeFromLastTime() {
+                           var savedTime = localStorage.getItem('vsl_time_14x4ao7uue');
+                           if (wistiaPlayer && savedTime) {
+                               wistiaPlayer.time(parseFloat(savedTime));
+                               wistiaPlayer.play();
+                           }
+                           document.getElementById('resumeModal').style.display = 'none';
+                        }
+
+                        function restartVideo() {
+                           if (wistiaPlayer) {
+                               wistiaPlayer.time(0);
+                               wistiaPlayer.play();
+                           }
+                           localStorage.removeItem('vsl_time_14x4ao7uue');
+                           document.getElementById('resumeModal').style.display = 'none';
                         }
 
                         function resumeVideo() {
