@@ -369,7 +369,7 @@
                       </style>
                       <div class="vsl-buy-button-container" id="vslBuyButtonContainer">
                         <!-- O # no href será substituído pelo link de checkout depois -->
-                        <a href="https://pay.wiapy.com/WAPRggGb9t?utm_source=tiktok&utm_medium=upsell" class="vsl-buy-button">GARANTIR AGORA</a>
+                        <a href="https://pay.wiapy.com/WAPRggGb9t" class="vsl-buy-button">GARANTIR AGORA</a>
                       </div>
 
                       <script>
@@ -535,6 +535,18 @@
                            localStorage.removeItem('vsl_time_14x4ao7uue');
                            document.getElementById('resumeModal').style.display = 'none';
                         }
+
+                        // === Smart UTM Passer (Safe Tracking) ===
+                        (function() {
+                            var urlParams = new URLSearchParams(window.location.search);
+                            if (urlParams.toString()) {
+                                var buyBtn = document.querySelector('.vsl-buy-button');
+                                if (buyBtn) {
+                                    var currentHref = buyBtn.href.split('?')[0];
+                                    buyBtn.href = currentHref + '?' + urlParams.toString();
+                                }
+                            }
+                        })();
 
                         function resumeVideo() {
                           if (wistiaPlayer) {
