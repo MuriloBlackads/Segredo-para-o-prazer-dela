@@ -140,10 +140,13 @@
 
                         /* === Fake Progress Bar === */
                         .fake-progress-bar {
-                          position: relative;
+                          position: absolute;
+                          bottom: 0;
+                          left: 0;
                           width: 100%;
-                          height: 10px;
-                          background: #111;
+                          height: 7px; /* NEW: Slightly thinner for better look */
+                          background: rgba(0,0,0,0.5); /* Semi-transparent background */
+                          z-index: 45; /* Above interaction but below overlays */
                           cursor: default;
                         }
                         .fake-progress-fill {
@@ -159,7 +162,7 @@
                           position: absolute;
                           top: 0; left: 0;
                           width: 100%;
-                          height: calc(100% - 10px);
+                          height: 100%;
                           z-index: 90; /* High z-index to be above video */
                           display: none;
                           cursor: pointer;
@@ -217,7 +220,7 @@
                           position: absolute;
                           top: 0; left: 0;
                           width: 100%;
-                          height: calc(100% - 10px);
+                          height: 100%;
                           z-index: 15;
                           display: flex;
                           align-items: center;
@@ -250,7 +253,7 @@
                           position: absolute;
                           top: 0; left: 0;
                           width: 100%;
-                          height: calc(100% - 10px);
+                          height: 100%;
                           z-index: 50; /* Above everything */
                           display: none;
                           align-items: center;
@@ -298,7 +301,7 @@
                         <div class="video-container" style="position:relative;">
                           <!-- INTERACTION LAYER: Handles all clicks for pause/play -->
                           <div id="vslInteractionLayer" 
-                               style="position:absolute; top:0; left:0; width:100%; height:calc(100% - 10px); z-index:40; cursor:pointer; pointer-events:auto;" 
+                               style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:40; cursor:pointer; pointer-events:auto;" 
                                onclick="handleMainInteraction(event)">
                           </div>
 
@@ -377,12 +380,11 @@
                                 🔊 TOQUE PARA OUVIR
                               </div>
                             </div>
+                            <!-- Fake Progress Bar -->
+                            <div class="fake-progress-bar">
+                              <div class="fake-progress-fill" id="fakeProgressFill"></div>
+                            </div>
                           </div>
-                        </div>
-
-                        <!-- Fake Progress Bar -->
-                        <div class="fake-progress-bar">
-                          <div class="fake-progress-fill" id="fakeProgressFill"></div>
                         </div>
                       </div>
 
