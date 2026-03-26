@@ -424,6 +424,7 @@
                         // GLOBAL VSL ENGINE
                         window.vsl_hasStartedSound = false;
                         window.wistiaPlayer = null;
+                        window.vsl_isResuming = false; // NEW: track if user chose to resume
                         var delayTimeSeconds = 1800; // 30 minutes
                         var buttonRevealed = false;
                         var fakeBarInterval;
@@ -445,6 +446,9 @@
 
                             if (player) {
                                 try {
+                                    if (!window.vsl_hasStartedSound && !window.vsl_isResuming) {
+                                        player.time(0); // RESTART on first click if not resuming
+                                    }
                                     player.unmute();
                                     player.volume(1);
                                     player.play();
@@ -453,6 +457,9 @@
                                     if (overlay) overlay.style.display = 'none';
                                     var iLayer = document.getElementById('vslInteractionLayer');
                                     if (iLayer) iLayer.style.display = 'block';
+                                    // FORCE HIDE SPINNER
+                                    var loader = document.getElementById('vslLoading');
+                                    if (loader) loader.classList.remove('active');
                                     console.log("ACTION: UNMUTE SUCCESS");
                                 } catch(err) { 
                                   console.error("ACTION: UNMUTE ERR", err);
@@ -492,6 +499,7 @@
 
                         window.resumeFromLastTime = function(e) {
                           var saved = localStorage.getItem('vsl_time_oko7yw4pys');
+                          window.vsl_isResuming = true; // Mark as resuming
                           if (window.wistiaPlayer && saved) window.wistiaPlayer.time(parseFloat(saved));
                           window.unmuteWistia(e);
                           document.getElementById('resumeModal').style.display = 'none';
