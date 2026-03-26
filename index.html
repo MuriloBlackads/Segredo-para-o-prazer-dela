@@ -608,7 +608,7 @@
                                window.stopFakeBar();
                              });
 
-                             video.bind("waiting", function() { document.getElementById('vslLoading').classList.add('active'); });
+                             // video.bind("waiting", function() { document.getElementById('vslLoading').classList.add('active'); }); // REMOVED to prevent stuck spinner
                              video.bind("playing", function() { 
                                document.getElementById('vslLoading').classList.remove('active');
                                document.getElementById('pauseOverlay').classList.remove('active');
