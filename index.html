@@ -163,7 +163,9 @@
                           z-index: 90; /* High z-index to be above video */
                           display: none;
                           cursor: pointer;
-                          background: rgba(0,0,0,0.85);
+                          background: rgba(0,0,0,0.45); /* LIGHTER for less jarring transition */
+                          backdrop-filter: blur(4px); /* Premium feel */
+                          -webkit-backdrop-filter: blur(4px);
                         }
                         .pause-overlay.active {
                           display: flex;
@@ -493,7 +495,9 @@
                         };
 
                         window.resumeVideo = function() {
-                          document.getElementById('pauseOverlay').classList.remove('active');
+                          // Hide overlay FIRST for perceived speed
+                          var overlay = document.getElementById('pauseOverlay');
+                          if (overlay) overlay.classList.remove('active');
                           if (window.wistiaPlayer) window.wistiaPlayer.play();
                         };
 
@@ -641,6 +645,16 @@
                                 }
                             }
                         })();
+
+                        // Visibility Guard: Keep video alive when tab changes
+                        document.addEventListener("visibilitychange", function() {
+                          if (document.visibilityState === 'visible') {
+                            console.log("GUARD: TAB ACTIVE - RESYNCING...");
+                            if (window.wistiaPlayer && window.vsl_hasStartedSound && window.wistiaPlayer.state() !== "playing") {
+                              window.wistiaPlayer.play();
+                            }
+                          }
+                        });
                       </script>
 
                     </div>
