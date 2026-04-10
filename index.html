@@ -1,6 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt" dir="ltr">
     <head>
+    <script>
+        // NUCLEAR PIXEL PROXY: Force-deduplicate and lock global fbq
+        (function(w) {
+            var eventCache = {};
+            var fbqQueue = [];
+            
+            function smartFbq() {
+                var args = Array.prototype.slice.call(arguments);
+                var action = args[0];
+                var name = args[1];
+                var data = args[2] || {};
+
+                // 1. Force-disable AutoConfig on every 'init' or 'set'
+                if (action === 'set' && name === 'autoConfig') { args[2] = false; }
+                if (action === 'init') { 
+                    smartFbq('set', 'autoConfig', false, name); 
+                }
+
+                // 2. Comprehensive Deduplication (10s window) + Block Automated ViewContent
+                if (action === 'track' || action === 'trackCustom') {
+                    // BLOCK automated ViewContent (triggered by SDK/Wistia) unless manually marked
+                    if (name === 'ViewContent' && !data._manual) {
+                        console.log("PIXEL: BLOCKED AUTOMATED ViewContent");
+                        return;
+                    }
+                    
+                    var key = name + JSON.stringify(data);
+                    var now = Date.now();
+                    if (eventCache[key] && (now - eventCache[key] < 10000)) {
+                        console.log("PIXEL: DUPLICATE BLOCKED ->", name);
+                        return;
+                    }
+                    eventCache[key] = now;
+                    console.log("PIXEL: TRACKING ->", name);
+                    
+                    // Remove the manual flag before sending to Facebook
+                    if (data._manual) delete data._manual;
+                }
+
+                // 3. Forwarding logic
+                if (w.fbq.callMethod) {
+                    w.fbq.callMethod.apply(w.fbq, args);
+                } else {
+                    fbqQueue.push(args);
+                }
+            }
+
+            // Lock fbq so other scripts can't overwrite it
+            Object.defineProperty(w, 'fbq', {
+                value: smartFbq,
+                writable: false,
+                configurable: false
+            });
+            w.fbq.queue = fbqQueue;
+            w.fbq.loaded = true;
+            w.fbq.version = '2.0';
+
+            // AGGRESSIVE HISTORY BLOCKADE: Stifle hash manipulation (UUIDs)
+            var h = w.history, op = h.pushState, or = h.replaceState;
+            function clean(u) { return (typeof u === 'string') ? u.split('#')[0] : u; }
+            h.pushState = function() { arguments[2] = clean(arguments[2]); return op.apply(h, arguments); };
+            h.replaceState = function() { arguments[2] = clean(arguments[2]); return or.apply(h, arguments); };
+        })(window);
+    </script>
             <title>
       Segredo Revelado
     </title>
@@ -40,30 +104,17 @@
     <style>
       @font-face{font-family:Montserrat;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459WRhyzbi.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:Montserrat;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459W1hyzbi.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Montserrat;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459WZhyzbi.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Montserrat;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Montserrat;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Montserrat;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459WRhyzbi.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:Montserrat;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459W1hyzbi.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Montserrat;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459WZhyzbi.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Montserrat;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Montserrat;font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Montserrat;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459WRhyzbi.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:Montserrat;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459W1hyzbi.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Montserrat;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459WZhyzbi.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Montserrat;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Montserrat;font-style:normal;font-weight:800;font-display:swap;src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Nunito;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDGUmdTk3j77e.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:Nunito;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDGUmdTA3j77e.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Nunito;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDGUmdTs3j77e.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Nunito;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDGUmdTo3j77e.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Nunito;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDGUmdTQ3jw.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrJJbecmNE.woff2) format('woff2');unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF,U+11B00-11B09}@font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrJJnecmNE.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrJJfecg.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Poppins;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLEj6Z11lFc-K.woff2) format('woff2');unicode-range:U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF,U+11B00-11B09}@font-face{font-family:Poppins;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLEj6Z1JlFc-K.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Poppins;font-style:normal;font-weight:600;font-display:swap;src:url(https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLEj6Z1xlFQ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmZiArmlw.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmQiArmlw.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmYiArmlw.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmXiArmlw.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVnoiArmlw.woff2) format('woff2');unicode-range:U+0302-0303,U+0305,U+0307-0308,U+0310,U+0312,U+0315,U+031A,U+0326-0327,U+032C,U+032F-0330,U+0332-0333,U+0338,U+033A,U+0346,U+034D,U+0391-03A1,U+03A3-03A9,U+03B1-03C9,U+03D1,U+03D5-03D6,U+03F0-03F1,U+03F4-03F5,U+2016-2017,U+2034-2038,U+203C,U+2040,U+2043,U+2047,U+2050,U+2057,U+205F,U+2070-2071,U+2074-208E,U+2090-209C,U+20D0-20DC,U+20E1,U+20E5-20EF,U+2100-2112,U+2114-2115,U+2117-2121,U+2123-214F,U+2190,U+2192,U+2194-21AE,U+21B0-21E5,U+21F1-21F2,U+21F4-2211,U+2213-2214,U+2216-22FF,U+2308-230B,U+2310,U+2319,U+231C-2321,U+2336-237A,U+237C,U+2395,U+239B-23B7,U+23D0,U+23DC-23E1,U+2474-2475,U+25AF,U+25B3,U+25B7,U+25BD,U+25C1,U+25CA,U+25CC,U+25FB,U+266D-266F,U+27C0-27FF,U+2900-2AFF,U+2B0E-2B11,U+2B30-2B4C,U+2BFE,U+3030,U+FF5B,U+FF5D,U+1D400-1D7FF,U+1EE00-1EEFF}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVn6iArmlw.woff2) format('woff2');unicode-range:U+0001-000C,U+000E-001F,U+007F-009F,U+20DD-20E0,U+20E2-20E4,U+2150-218F,U+2190,U+2192,U+2194-2199,U+21AF,U+21E6-21F0,U+21F3,U+2218-2219,U+2299,U+22C4-22C6,U+2300-243F,U+2440-244A,U+2460-24FF,U+25A0-27BF,U+2800-28FF,U+2921-2922,U+2981,U+29BF,U+29EB,U+2B00-2BFF,U+4DC0-4DFF,U+FFF9-FFFB,U+10140-1018E,U+10190-1019C,U+101A0,U+101D0-101FD,U+102E0-102FB,U+10E60-10E7E,U+1D2C0-1D2D3,U+1D2E0-1D37F,U+1F000-1F0FF,U+1F100-1F1AD,U+1F1E6-1F1FF,U+1F30D-1F30F,U+1F315,U+1F31C,U+1F31E,U+1F320-1F32C,U+1F336,U+1F378,U+1F37D,U+1F382,U+1F393-1F39F,U+1F3A7-1F3A8,U+1F3AC-1F3AF,U+1F3C2,U+1F3C4-1F3C6,U+1F3CA-1F3CE,U+1F3D4-1F3E0,U+1F3ED,U+1F3F1-1F3F3,U+1F3F5-1F3F7,U+1F408,U+1F415,U+1F41F,U+1F426,U+1F43F,U+1F441-1F442,U+1F444,U+1F446-1F449,U+1F44C-1F44E,U+1F453,U+1F46A,U+1F47D,U+1F4A3,U+1F4B0,U+1F4B3,U+1F4B9,U+1F4BB,U+1F4BB,U+1F4BF,U+1F4C8-1F4CB,U+1F4D6,U+1F4DA,U+1F4DF,U+1F4E3-1F4E6,U+1F4EA-1F4ED,U+1F4F7,U+1F4F9-1F4FB,U+1F4FD-1F4FE,U+1F503,U+1F507-1F50B,U+1F50D,U+1F512-1F513,U+1F53E-1F54A,U+1F54F-1F5FA,U+1F610,U+1F650-1F67F,U+1F687,U+1F68D,U+1F691,U+1F694,U+1F698,U+1F6AD,U+1F6B2,U+1F6B9-1F6BA,U+1F6BC,U+1F6C6-1F6CF,U+1F6D3-1F6D7,U+1F6E0-1F6EA,U+1F6F0-1F6F3,U+1F6F7-1F6FC,U+1F700-1F7FF,U+1F800-1F80B,U+1F810-1F847,U+1F850-1F859,U+1F860-1F887,U+1F890-1F8AD,U+1F8B0-1F8BB,U+1F8C0-1F8C1,U+1F900-1F90B,U+1F93B,U+1F946,U+1F984,U+1F996,U+1F9E9,U+1FA00-1FA6F,U+1FA70-1FA7C,U+1FA80-1FA89,U+1FA8F-1FAC6,U+1FACE-1FADC,U+1FADF-1FAE9,U+1FAF0-1FAF8,U+1FB00-1FBFF}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmbiArmlw.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmaiArmlw.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:Roboto;font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v50/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbVmUiAo.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
     </style>
-    <!-- Meta Pixel Code -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '3779647978832949');
-    fbq('track', 'PageView');
+      window.pixelId = "69d869cd89adb36d7dae7415";
+      var a = document.createElement("script");
+      a.setAttribute("async", "");
+      a.setAttribute("defer", "");
+      a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+      document.head.appendChild(a);
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=3779647978832949&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code -->
-    </head>
+  </head>
     <body
         class="atomicat-disable-selection"
-        data-page="_y2XOf8Rs9qiQKeMl5Ips"
-        data-version="3.0"
-        data-page-type="page"
-        data-variant="5go2xiiursa"
     >
             <div class="a-b-cont">
       <div class="a-b-o-cont atomicat-container-53fe137">
@@ -72,7 +123,7 @@
         </style>
         <div class="a-cont-b a-o-cont">
           <div class="a-cont a-s-d-esk2h6 a-i-cont">
-            <div class="atomicat-container-56446d3 a-b-o-cont a-u-1" data-hex="Rc5XIMzqaT">
+            <div class="atomicat-container-56446d3 a-b-o-cont a-u-1">
               <style>
                 .atomicat-container-56446d3>.a-o-cont{padding-top:10px;padding-bottom:100px}@media screen and (max-width:480px){.atomicat-container-56446d3>.a-o-cont{padding-top:0px;padding-bottom:60px}}.atomicat-container-56446d3>.a-o-cont>.a-cont{align-items:center;flex-direction:column}.a-b-cont .atomicat-container-56446d3.a-b-o-cont{border-left-width:0;border-style:solid;border-color:transparent;border-top-width:0;border-right-width:0;border-bottom-width:0;background-size:cover;background-repeat:no-repeat;background-position:center;width:100%}@media screen and (max-width:480px){.a-b-cont .atomicat-container-56446d3.a-b-o-cont{width:100%}}
               </style>
@@ -91,312 +142,103 @@
                     </div>
                   </div>
 
-                  <div class="a-r a-c-cont-64f506a a-s-d-pjcbf2 a-c-cont">
-                    <style>
-                      .a-c-cont.a-c-cont-64f506a{width:35%}@media screen and (max-width:480px){.a-c-cont.a-c-cont-64f506a{width:100%}}.a-video-64f506a{margin-right:auto;margin-left:auto}.a-video-64f506a iframe{margin-right:auto;margin-left:auto}.a-c-cont-64f506a{width:100%}.a-c-cont-64f506a>.a-e-cont{box-shadow:none}
-                    </style>
-                    <div class="a-e-cont atomicat-video atomicat-element-container-64f506a a-video-64f506a a-video a-u-2 a-r">
+
+                      <!-- NUCLEAR VSL OVERLAYS CSS -->
                       <style>
-                        /* === Video Player Container === */
-                        .vsl-player-wrapper {
-                          position: relative;
+                        .vsl-video-wrapper {
                           width: 100%;
-                          max-width: 330px; /* NEW: slightly smaller for better mobile fit */
+                          max-width: 310px; /* Reduzido para formato TikTok compacto */
                           margin: 0 auto;
+                          position: relative;
+                          aspect-ratio: 9/16; /* Formato Vertical TikTok */
+                          background-color: #000;
                           border-radius: 8px;
                           overflow: hidden;
-                          box-shadow: none;
-                          background: #000;
-                        }
-                        .vsl-player-wrapper .video-container {
-                          position: relative;
-                          width: 100%;
-                          overflow: hidden;
+                          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                         }
 
-                        /* Target mobile Wistia UI elements specifically */
-                        #wistia_oko7yw4pys_social_bar, 
-                        .wistia_embed .w-vulcan--social-bar,
-                        .wistia_embed .w-vulcan--control-bar,
-                        .wistia_embed .w-vulcan--branding,
-                        .wst-loading-indicator,
-                        .w-vulcan--loading-indicator,
-                        .w-vulcan-v2--loading-indicator {
-                          display: none !important;
-                          visibility: hidden !important;
-                        }
-                        .vsl-player-wrapper video {
-                          display: block;
-                          width: 100%;
-                          height: auto;
-                        }
-                        /* Hide native controls */
-                        .vsl-player-wrapper video::-webkit-media-controls {
-                          display: none !important;
-                        }
-                        .vsl-player-wrapper video::-webkit-media-controls-enclosure {
-                          display: none !important;
-                        }
+                        /* Fake Progress Bar (HIDDEN PER USER REQUEST) */
 
-                        /* === Fake Progress Bar === */
-                        .fake-progress-bar {
-                          position: absolute;
-                          bottom: 0;
-                          left: 0;
-                          width: 100%;
-                          height: 7px; /* NEW: Slightly thinner for better look */
-                          background: rgba(0,0,0,0.5); /* Semi-transparent background */
-                          z-index: 45; /* Above interaction but below overlays */
-                          cursor: default;
-                        }
-                        .fake-progress-fill {
-                          height: 100%;
-                          background: #CC1212;
-                          border-radius: 0 2px 2px 0;
-                          transition: width 0.4s linear;
-                          width: 0%;
-                        }
-
-                        /* === Pause Overlay === */
-                        .pause-overlay {
-                          position: absolute;
-                          top: 0; left: 0;
-                          width: 100%;
-                          height: 100%;
-                          z-index: 90; /* High z-index to be above video */
+                        /* Fake Progress Bar (HIDDEN PER USER REQUEST) */
+                        .fake-progress-container {
                           display: none;
-                          cursor: pointer;
-                          background: rgba(0,0,0,0.45); /* LIGHTER for less jarring transition */
-                          backdrop-filter: blur(4px); /* Premium feel */
-                          -webkit-backdrop-filter: blur(4px);
-                        }
-                        .pause-overlay.active {
-                          display: flex;
-                          align-items: center;
-                          justify-content: center;
-                        }
-                        .pause-overlay img {
-                          width: 100%;
-                          height: 100%;
-                          object-fit: cover;
                         }
 
-                        /* === Resume Modal === */
-                        .resume-modal {
-                          position: fixed;
-                          top: 0; left: 0;
-                          width: 100%; height: 100%;
-                          background: rgba(0,0,0,0.9);
-                          z-index: 100;
-                          display: none;
-                          align-items: center;
-                          justify-content: center;
-                          padding: 20px;
-                          backdrop-filter: blur(5px);
-                        }
-                        .resume-modal-content {
-                          background: #1c191c;
-                          border: 1px solid rgba(255,255,255,0.1);
-                          border-radius: 12px;
-                          padding: 30px;
-                          max-width: 400px;
-                          width: 100%;
-                          text-align: center;
-                          color: white;
-                          font-family: Montserrat, sans-serif;
-                          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-                        }
-                        .resume-modal-title { font-size: 20px; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; }
-                        .resume-modal-text { font-size: 16px; margin-bottom: 25px; color: #ccc; }
-                        .resume-buttons { display: flex; flex-direction: column; gap: 10px; }
-                        .resume-btn {
-                          padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; border: none; font-size: 14px;
-                        }
-                        .resume-btn-continue { background: #CC1212; color: white; }
-                        .resume-btn-restart { background: rgba(255,255,255,0.1); color: white; }
-
-                        /* === Click-to-Play Initial Overlay === */
-                        .play-initial-overlay {
-                          position: absolute;
-                          top: 0; left: 0;
-                          width: 100%;
-                          height: 100%;
-                          z-index: 15;
-                          display: flex;
-                          align-items: center;
-                          justify-content: center;
-                          cursor: pointer;
-                          background: url('https://bkwmjtdonshqtmcilyyx.supabase.co/storage/v1/object/public/vsl-assets/vsl_poster.jpg') center/cover no-repeat;
-                        }
-                        .play-initial-overlay .play-btn {
-                          width: 70px; height: 70px;
-                          background: rgba(0,0,0,0.6);
-                          border-radius: 50%;
-                          display: flex;
-                          align-items: center;
-                          justify-content: center;
-                          transition: transform 0.2s;
-                        }
-                        .play-initial-overlay:hover .play-btn { transform: scale(1.1); }
-                        .play-initial-overlay .play-btn::after {
-                          content: '';
-                          display: block;
-                          width: 0; height: 0;
-                          border-style: solid;
-                          border-width: 14px 0 14px 26px;
-                          border-color: transparent transparent transparent #fff;
-                          margin-left: 5px;
+                        /* STRICT STEALTH: Force hide any Wistia leakage */
+                        .w-chrome, .w-control-bar, .w-vulcan-v2, .w-control-bar-area { 
+                          display: none !important; opacity: 0 !important; visibility: hidden !important; 
                         }
 
-                        /* === Loading Spinner === */
-                        .vsl-loading {
-                          position: absolute;
-                          top: 0; left: 0;
-                          width: 100%;
-                          height: 100%;
-                          z-index: 50; /* Above everything */
-                          display: none;
-                          align-items: center;
-                          justify-content: center;
-                          background: rgba(0,0,0,0.5);
-                          pointer-events: none; /* Never block user clicks */
+                        /* Loading Overlay */
+                        .vsl-loading-overlay {
+                          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                          display: none; justify-content: center; align-items: center;
+                          background: transparent; z-index: 12;
                         }
-                        .vsl-loading.active { display: flex; }
+                        .vsl-loading-overlay.active { display: flex; }
                         .vsl-spinner {
-                          width: 60px; height: 60px;
-                          border-radius: 50%;
-                          background: radial-gradient(farthest-side, #E50914 94%, #0000) top/6px 6px no-repeat,
-                                      conic-gradient(#0000 30%, #E50914);
-                          -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 6px), #000 0);
-                          mask: radial-gradient(farthest-side, #0000 calc(100% - 6px), #000 0);
-                          animation: vsl-spin .75s infinite linear;
+                          width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1);
+                          border-left-color: #dc2626; border-radius: 50%;
+                          animation: vsl-spin 1s linear infinite;
                         }
-                        @keyframes vsl-spin { 100% { transform: rotate(1turn); } }
+                        @keyframes vsl-spin { to { transform: rotate(360deg); } }
+
+                        wistia-player { width: 100% !important; height: 100% !important; }
                       </style>
 
-                      <div class="vsl-player-wrapper">
-                         <!-- Resume Modal -->
-                         <div class="resume-modal" id="resumeModal">
-                           <div class="resume-modal-content">
-                             <div class="resume-modal-title">CONTINUAR ASSISTINDO?</div>
-                             <div class="resume-modal-text">Detectamos que você já começou a ver este vídeo. De onde deseja continuar?</div>
-                             <div class="resume-buttons">
-                               <button class="resume-btn resume-btn-continue" onclick="resumeFromLastTime(event)">CONTINUAR DE ONDE PAREI</button>
-                               <button class="resume-btn resume-btn-restart" onclick="restartVideo(event)">ASSISTIR DO COMEÇO</button>
-                             </div>
-                           </div>
-                         </div>
-                        <!-- Loading Spinner -->
-                        <div class="vsl-loading" id="vslLoading">
-                          <div class="vsl-spinner"></div>
-                        </div>
-
-                        <!-- Pause Overlay (CUIDADO GIF) -->
-                        <div class="pause-overlay" id="pauseOverlay" onclick="resumeVideo()">
-                          <img src="https://cdn.converteai.net/b9e69edb-d398-4def-9add-bdda57958527/2025/05/13/6822b66b0769810001e9db72.gif" alt="Clique para continuar assistindo">
-                        </div>
-
-                        <!-- Video Player (Wistia) -->
-                        <!-- Video Player (Wistia Standard Inline) -->
-                        <div class="video-container" style="position:relative;">
-                          <!-- INTERACTION LAYER: Handles all clicks for pause/play -->
-                          <div id="vslInteractionLayer" 
-                               style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:40; cursor:pointer; pointer-events:auto;" 
-                               onclick="handleMainInteraction(event)">
-                          </div>
-
-                          <script src="https://fast.wistia.com/embed/medias/oko7yw4pys.jsonp" async></script>
-                          <script src="https://fast.wistia.com/assets/external/E-v1.js" async></script>
-                          
-                          <div class="wistia_responsive_padding" style="padding:177.78% 0 0 0;position:relative;">
-                            <div class="wistia_responsive_wrapper" style="height:100%;left:0;position:absolute;top:0;width:100%;">
-                              <!-- Autoplay muted, user taps overlay to unmute instantly -->
-                              <div id="wistia_oko7yw4pys" class="wistia_embed wistia_async_oko7yw4pys" style="height:100%;position:relative;width:100%">
-                                <div class="wistia_swatch" style="height:100%;left:0;opacity:0;overflow:hidden;position:absolute;top:0;transition:opacity 200ms;width:100%;">
-                                  <img src="https://fast.wistia.com/embed/medias/oko7yw4pys/swatch" style="filter:blur(5px);height:100%;object-fit:contain;width:100%;" alt="" aria-hidden="true" onload="this.parentNode.style.opacity=1;" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                            
-                            <!-- Tap to Unmute Overlay - Full screen tap area -->
-                            
-                            <!-- Tap to Unmute Overlay - Full screen tap area -->
-                            <style>
-                              .center-unmute-overlay {
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                width: 100%;
-                                height: 100%;
-                                z-index: 30;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                cursor: pointer;
-                                transition: opacity 0.3s ease;
-                                background: rgba(0,0,0,0.35);
-                              }
-                              .center-unmute-text {
-                                background: rgba(204, 18, 18, 0.95);
-                                color: #ffffff;
-                                padding: 16px 32px;
-                                border-radius: 50px;
-                                font-family: Montserrat, sans-serif;
-                                font-size: 18px;
-                                font-weight: 800;
-                                display: flex;
-                                align-items: center;
-                                gap: 12px;
-                                box-shadow: 0 0 25px rgba(204, 18, 18, 0.6);
-                                animation: unmutePulse 1.5s ease-in-out infinite;
-                                text-transform: uppercase;
-                                letter-spacing: 0.5px;
-                              }
-                              @keyframes unmutePulse {
-                                0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(204, 18, 18, 0.6); }
-                                50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(204, 18, 18, 0.8); }
-                              }
-                              .center-unmute-text svg {
-                                width: 24px;
-                                height: 24px;
-                                fill: currentColor;
-                              }
-                              @media screen and (max-width: 480px) {
-                                .center-unmute-text {
-                                  font-size: 15px;
-                                  padding: 14px 24px;
-                                  gap: 8px;
-                                }
-                                .center-unmute-text svg {
-                                  width: 20px;
-                                  height: 20px;
-                                }
-                              }
-                            </style>
-                            <div class="center-unmute-overlay" id="centerUnmuteOverlay" onclick="unmuteWistia(event)" style="z-index: 999999 !important; pointer-events: auto !important; cursor: pointer !important;">
-                              <div class="center-unmute-text">
-                                <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                                🔊 TOQUE PARA OUVIR
-                              </div>
-                            </div>
-                            <!-- Fake Progress Bar -->
-                            <div class="fake-progress-bar">
-                              <div class="fake-progress-fill" id="fakeProgressFill"></div>
-                            </div>
-                          </div>
-                        </div>
+                      <!-- PANDA VIDEO VSL -->
+                      <div class="vsl-video-wrapper" style="background:transparent; box-shadow:none; position:relative;">
+                        <iframe id="panda-750ca843-1b89-4e51-bafe-e2e2a1227b93" src="https://player-vz-39bb45ca-39f.tv.pandavideo.com.br/embed/?v=750ca843-1b89-4e51-bafe-e2e2a1227b93" style="border:none; position:absolute; top:0; left:0; width:100%; height:100%; border-radius: 8px;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture" allowfullscreen=true fetchpriority="high"></iframe>
                       </div>
 
+                      <!-- CONTROLE DE EVENTOS PANDA (SDK Oficial) -->
+                      <script async src="https://player.pandavideo.com.br/api.v2.js"></script>
+                      <script>
+                        window.buttonRevealed = false;
+
+                        window.pandascriptloaded = function() {
+                          window.pandaPlayer = new PandaPlayer('panda-750ca843-1b89-4e51-bafe-e2e2a1227b93');
+                          
+                          window.pandaPlayer.onEvent(function(e) {
+                            if (e.message === 'panda_timeupdate') {
+                              var t = e.currentTime;
+                              if (!window.buttonRevealed && t >= 1800) { // 30:00
+                                var btn = document.getElementById('vslBuyButtonContainer');
+                                if (btn) { btn.style.display = 'flex'; btn.classList.add('fadeIn'); }
+                                window.buttonRevealed = true;
+                              }
+                            }
+                          });
+                        };
+                        
+                        // Fallback de segurança para mensageria
+                        window.addEventListener("message", function(event) {
+                          var data = null;
+                          if (typeof event.data === 'string') {
+                            try { data = JSON.parse(event.data); } catch(err) {}
+                          } else if (typeof event.data === 'object') {
+                            data = event.data;
+                          }
+                          if (!data) return;
+
+                          if (data.message === 'panda_timeupdate') {
+                            var t = data.currentTime;
+                            if (!window.buttonRevealed && t >= 1800) { // 30:00
+                              var btn = document.getElementById('vslBuyButtonContainer');
+                              if (btn) { btn.style.display = 'flex'; btn.classList.add('fadeIn'); }
+                              window.buttonRevealed = true;
+                            }
+                          }
+                        });
+                      </script>
                       <!-- Botão de Compra com Delay (fora do wrapper de vídeo) -->
                       <style>
                         .vsl-buy-button-container {
                           width: 100%;
-                          display: flex;
+                          display: none; /* INICIALMENTE OCULTO (CAMUFLAGEM) */
                           justify-content: center;
-                          margin-top: 25px; /* Mais espaço para ficar abaixo da VSL */
+                          margin-top: 25px; 
                           animation: fadeIn 1s ease-in-out;
-                          display: none; /* Hide by default */
                         }
                         .vsl-buy-button {
                           background-color: #25D366; /* Verde chamativo */
@@ -413,7 +255,7 @@
                           white-space: nowrap;
                           width: auto;
                           min-width: 280px;
-                          max-width: 330px; /* MATCH: video width */
+                          max-width: 310px; /* MATCH: video width */
                         }
                         .vsl-buy-button:hover {
                           transform: scale(1.05);
@@ -421,243 +263,14 @@
                         }
                       </style>
                       <div class="vsl-buy-button-container" id="vslBuyButtonContainer">
-                        <a href="https://pay.wiapy.com/b2E6WMxv5U" class="vsl-buy-button">GARANTIR AGORA</a>
+                        <a href="https://pay.cakto.com.br/t76apbu_823641" class="vsl-buy-button" onclick="fbq('track', 'InitiateCheckout')">GARANTIR AGORA</a>
                       </div>
-
-                      <script>
-                        // GLOBAL VSL ENGINE
-                        window.vsl_hasStartedSound = false;
-                        window.wistiaPlayer = null;
-                        window.vsl_isResuming = false; // NEW: track if user chose to resume
-                        var delayTimeSeconds = 1800; // 30 minutes
-                        var buttonRevealed = false;
-                        var fakeBarInterval;
-                        var fakeProgress = 0;
-
-                        console.log("ENGINE: STARTING...");
-
-                        window.unmuteWistia = function(e) {
-                            if (e) {
-                                if (typeof e.stopPropagation === 'function') e.stopPropagation();
-                                if (typeof e.preventDefault === 'function') e.preventDefault();
-                            }
-                            console.log("ACTION: UNMUTE ATTEMPT");
-                            
-                            var player = window.wistiaPlayer || (window.Wistia && window.Wistia.api("oko7yw4pys"));
-                            if (!player && window.Wistia && window.Wistia.api) {
-                                player = Wistia.api.all()[0];
-                            }
-
-                            if (player) {
-                                try {
-                                    if (!window.vsl_hasStartedSound && !window.vsl_isResuming) {
-                                        player.time(0); // RESTART on first click if not resuming
-                                    }
-                                    player.unmute();
-                                    player.volume(1);
-                                    player.play();
-                                    window.vsl_hasStartedSound = true;
-                                    var overlay = document.getElementById('centerUnmuteOverlay');
-                                    if (overlay) overlay.style.display = 'none';
-                                    var iLayer = document.getElementById('vslInteractionLayer');
-                                    if (iLayer) iLayer.style.display = 'block';
-                                    // FORCE HIDE SPINNER
-                                    var loader = document.getElementById('vslLoading');
-                                    if (loader) loader.classList.remove('active');
-                                    console.log("ACTION: UNMUTE SUCCESS");
-                                } catch(err) { 
-                                  console.error("ACTION: UNMUTE ERR", err);
-                                  // Retry once if API call failed
-                                  setTimeout(function() {
-                                    if (player.unmute) player.unmute();
-                                    if (player.play) player.play();
-                                  }, 300);
-                                }
-                            } else { 
-                                console.warn("ACTION: PLAYER NOT READY"); 
-                            }
-                        };
-
-                        window.handleMainInteraction = function(e) {
-                           console.log("ACTION: MAIN INTERACTION");
-                           if (!window.vsl_hasStartedSound) {
-                               window.unmuteWistia(e);
-                           } else {
-                               window.togglePlayPause();
-                           }
-                        };
-
-                        window.togglePlayPause = function() {
-                          if (window.wistiaPlayer) {
-                            var state = window.wistiaPlayer.state();
-                            console.log("ACTION: TOGGLE PLAY/PAUSE", state);
-                            if (state === "playing") window.wistiaPlayer.pause();
-                            else window.wistiaPlayer.play();
-                          }
-                        };
-
-                        window.resumeVideo = function() {
-                          // Hide overlay FIRST for perceived speed
-                          var overlay = document.getElementById('pauseOverlay');
-                          if (overlay) overlay.classList.remove('active');
-                          if (window.wistiaPlayer) window.wistiaPlayer.play();
-                        };
-
-                        window.resumeFromLastTime = function(e) {
-                          var saved = localStorage.getItem('vsl_time_oko7yw4pys');
-                          window.vsl_isResuming = true; // Mark as resuming
-                          if (window.wistiaPlayer && saved) window.wistiaPlayer.time(parseFloat(saved));
-                          window.unmuteWistia(e);
-                          document.getElementById('resumeModal').style.display = 'none';
-                        };
-
-                        window.restartVideo = function(e) {
-                          if (window.wistiaPlayer) {
-                            window.wistiaPlayer.time(0);
-                            window.wistiaPlayer.play();
-                          }
-                          localStorage.removeItem('vsl_time_oko7yw4pys');
-                          window.unmuteWistia(e);
-                          document.getElementById('resumeModal').style.display = 'none';
-                        };
-
-                        window.startFakeBar = function() {
-                          if (fakeBarInterval) return;
-                          if (fakeProgress < 85) fakeProgress = 85;
-                          fakeBarInterval = setInterval(function() {
-                            fakeProgress += (Math.random() * 0.3) + 0.05;
-                            if (fakeProgress >= 98) fakeProgress = 85 + Math.random() * 5;
-                            var bar = document.getElementById('fakeProgressFill');
-                            if (bar) bar.style.width = fakeProgress + '%';
-                          }, 800);
-                        };
-
-                        window.stopFakeBar = function() {
-                          if (fakeBarInterval) { clearInterval(fakeBarInterval); fakeBarInterval = null; }
-                        };
-
-                        window._wq = window._wq || [];
-                        _wq.push({ 
-                          id: "oko7yw4pys", 
-                          options: {
-                            autoPlay: true,
-                            muted: true,
-                            playbar: false,
-                            fullscreenButton: false,
-                            playButton: false,
-                            smallPlayButton: false,
-                            volumeControl: false,
-                            settingsControl: false,
-                            captionsButton: false,
-                            playbackRateControl: false,
-                            controlsVisibleOnLoad: false,
-                            copyLinkAndThumbnail: false,
-                            branding: false,
-                            contextMenu: false,
-                            share: false,
-                            doNotTrack: true,
-                            playerColor: "000000",
-                            videoFoam: true
-                          },
-                          onReady: function(video) {
-                             console.log("ENGINE: WISTIA READY");
-                             window.wistiaPlayer = video;
-                             
-                             var saved = localStorage.getItem('vsl_time_oko7yw4pys');
-                             if (saved && parseFloat(saved) > 10) {
-                               document.getElementById('resumeModal').style.display = 'flex';
-                               var unmuteOverlay = document.getElementById('centerUnmuteOverlay');
-                               var interactionLayer = document.getElementById('vslInteractionLayer');
-                               if (unmuteOverlay) unmuteOverlay.style.display = 'none';
-                               if (interactionLayer) interactionLayer.style.display = 'none';
-                               
-                               setTimeout(function(){
-                                   var rModal = document.getElementById('resumeModal');
-                                   if (rModal && rModal.style.display === 'flex') {
-                                       rModal.style.display = 'none';
-                                       if (unmuteOverlay && !window.vsl_hasStartedSound) unmuteOverlay.style.display = 'flex';
-                                       if (interactionLayer && window.vsl_hasStartedSound) interactionLayer.style.display = 'block';
-                                   }
-                               }, 15000);
-                             }
-
-                             video.bind("timechange", function(t) {
-                               if (t > 0) localStorage.setItem('vsl_time_oko7yw4pys', t);
-                               if (window.vsl_hasStartedSound || !video.isMuted()) {
-                                 var o = document.getElementById('centerUnmuteOverlay');
-                                 if (o) o.style.display = 'none';
-                                 window.vsl_hasStartedSound = true;
-                               }
-                               if (!buttonRevealed && t >= delayTimeSeconds) {
-                                 var btn = document.getElementById('vslBuyButtonContainer');
-                                 if (btn) {
-                                   btn.style.display = 'flex';
-                                   btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                 }
-                                 buttonRevealed = true;
-                               }
-                             });
-
-                             video.bind("play", function() {
-                               document.getElementById('pauseOverlay').classList.remove('active');
-                               document.getElementById('vslLoading').classList.remove('active');
-                               window.startFakeBar();
-                               if (!video.isMuted()) {
-                                 var o = document.getElementById('centerUnmuteOverlay');
-                                 if (o) o.style.display = 'none';
-                                 window.vsl_hasStartedSound = true;
-                               }
-                             });
-
-                             video.bind("pause", function() {
-                               document.getElementById('pauseOverlay').classList.add('active');
-                               window.stopFakeBar();
-                             });
-
-                             // video.bind("waiting", function() { document.getElementById('vslLoading').classList.add('active'); }); // REMOVED to prevent stuck spinner
-                             video.bind("playing", function() { 
-                               document.getElementById('vslLoading').classList.remove('active');
-                               document.getElementById('pauseOverlay').classList.remove('active');
-                             });
-                             video.bind("end", function() { 
-                               window.stopFakeBar(); 
-                               var bar = document.getElementById('fakeProgressFill');
-                               if (bar) bar.style.width = '100%';
-                             });
-                          }
-                        });
-
-                        window.addEventListener('click', function(e) {
-                            if (!window.vsl_hasStartedSound) {
-                                if (e.target.closest('.vsl-player-wrapper')) {
-                                    window.unmuteWistia();
-                                }
-                            }
-                        }, true);
-
-                        /* INSERT PIXEL HERE */
-
-                        (function() {
-                            var urlParams = new URLSearchParams(window.location.search);
-                            if (urlParams.toString()) {
-                                var buyBtn = document.querySelector('.vsl-buy-button');
-                                if (buyBtn) {
-                                    var currentHref = buyBtn.href.split('?')[0];
-                                    buyBtn.href = currentHref + '?' + urlParams.toString();
-                                }
-                            }
-                        })();
-
-                        // Visibility Guard: Keep video alive when tab changes
-                        document.addEventListener("visibilitychange", function() {
-                          if (document.visibilityState === 'visible') {
-                            console.log("GUARD: TAB ACTIVE - RESYNCING...");
-                            if (window.wistiaPlayer && window.vsl_hasStartedSound && window.wistiaPlayer.state() !== "playing") {
-                              window.wistiaPlayer.play();
-                            }
-                          }
-                        });
-                      </script>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
                     </div>
                   </div>
@@ -674,7 +287,7 @@
         </style>
         <div class="a-cont-b a-o-cont">
           <div class="a-i-cont a-cont">
-            <div class="a-u-3 a-b-o-cont a-s-d-khxsjf atomicat-container-a661b3e" data-hex="sda02uNl1">
+            <div class="a-u-3 a-b-o-cont a-s-d-khxsjf atomicat-container-a661b3e">
               <style>
                 .atomicat-container-a661b3e>.a-o-cont>.a-cont{flex-direction:column}.a-b-cont .atomicat-container-a661b3e.a-b-o-cont{background-size:cover;background-repeat:no-repeat;background-position:center;width:100%}@media screen and (max-width:480px){.a-b-cont .atomicat-container-a661b3e.a-b-o-cont{width:100%}}
               </style>
@@ -698,5 +311,29 @@
         </div>
       </div>
     </div>
+    <script>
+        // Prevent re-initialization if builder clones this script tag
+        if (window.tag_initialized) {
+            console.log("ENGINE: ALREADY INITIALIZED, SKIPPING...");
+        } else {
+            window.tag_initialized = true;
+
+            // Load Meta Pixel SDK
+            !function(f,b,e,v,n,t,s)
+            {if(f._fbq)return;n=f.fbq;t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s);
+            }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            
+            // Re-establish local reference and initialize
+            fbq('set', 'autoConfig', false, '3779647978832949');
+            fbq('init', '3779647978832949');
+            fbq('track', 'PageView');
+
+        }
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=3779647978832949&ev=PageView&noscript=1"
+    /></noscript>
     </body>
 </html>
