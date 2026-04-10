@@ -1,0 +1,8 @@
+node_modules
+aiox-core-main
+.git
+.vercel
+.next
+dist
+build
+*.log
