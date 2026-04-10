@@ -195,6 +195,23 @@
                       <script async src="https://player.pandavideo.com.br/api.v2.js"></script>
                       <script>
                         window.buttonRevealed = false;
+                        const REVEAL_TIME = 1800; // 30:00
+
+                        function showVslButton(immediate = false) {
+                          if (window.buttonRevealed) return;
+                          var btn = document.getElementById('vslBuyButtonContainer');
+                          if (btn) { 
+                            btn.style.display = 'flex'; 
+                            if (!immediate) btn.classList.add('fadeIn');
+                            window.buttonRevealed = true;
+                            localStorage.setItem('vsl_revealed', 'true');
+                          }
+                        }
+
+                        // Check persistence on load
+                        if (localStorage.getItem('vsl_revealed')) {
+                          showVslButton(true);
+                        }
 
                         window.pandascriptloaded = function() {
                           window.pandaPlayer = new PandaPlayer('panda-750ca843-1b89-4e51-bafe-e2e2a1227b93');
@@ -202,10 +219,8 @@
                           window.pandaPlayer.onEvent(function(e) {
                             if (e.message === 'panda_timeupdate') {
                               var t = e.currentTime;
-                              if (!window.buttonRevealed && t >= 1800) { // 30:00
-                                var btn = document.getElementById('vslBuyButtonContainer');
-                                if (btn) { btn.style.display = 'flex'; btn.classList.add('fadeIn'); }
-                                window.buttonRevealed = true;
+                              if (t >= REVEAL_TIME) {
+                                showVslButton();
                               }
                             }
                           });
@@ -223,10 +238,8 @@
 
                           if (data.message === 'panda_timeupdate') {
                             var t = data.currentTime;
-                            if (!window.buttonRevealed && t >= 1800) { // 30:00
-                              var btn = document.getElementById('vslBuyButtonContainer');
-                              if (btn) { btn.style.display = 'flex'; btn.classList.add('fadeIn'); }
-                              window.buttonRevealed = true;
+                            if (t >= REVEAL_TIME) {
+                              showVslButton();
                             }
                           }
                         });
