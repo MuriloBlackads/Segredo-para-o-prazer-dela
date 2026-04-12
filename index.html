@@ -199,7 +199,7 @@
                       <style>
                         .vsl-buy-button-container {
                           width: 100%;
-                          display: flex;
+                          display: none; /* OCULTO ATÉ O DELAY */
                           justify-content: center;
                           margin-top: 25px; 
                           animation: fadeIn 1s ease-in-out;
@@ -229,6 +229,30 @@
                       <div class="vsl-buy-button-container" id="vslBuyButtonContainer">
                         <a href="https://pay.cakto.com.br/t76apbu_823641" class="vsl-buy-button" target="_blank" rel="noopener noreferrer">GARANTIR AGORA</a>
                       </div>
+
+                      <script>
+                        // DELAY DE 30 MINUTOS = 1800 SEGUNDOS
+                        const SECONDS_TO_REVEAL = 1800;
+
+                        function revealButton() {
+                          var btn = document.getElementById('vslBuyButtonContainer');
+                          if (btn) {
+                            btn.style.setProperty('display', 'flex', 'important');
+                          }
+                        }
+
+                        // Fallback por tempo de página
+                        setTimeout(revealButton, SECONDS_TO_REVEAL * 1000);
+
+                        // Integração com Panda Video (postMessage)
+                        window.addEventListener('message', function(e) {
+                          if (e.data && e.data.type === 'panda_timeupdate') {
+                            if (e.data.currentTime >= SECONDS_TO_REVEAL) {
+                              revealButton();
+                            }
+                          }
+                        });
+                      </script>
                       </div>
                     </div>
                   </div>
