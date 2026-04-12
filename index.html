@@ -193,69 +193,13 @@
                         wistia-player { width: 100% !important; height: 100% !important; }
                       </style>
 
-                      <!-- PANDA VIDEO VSL -->
-                      <div class="vsl-video-wrapper" style="background:transparent; box-shadow:none; position:relative;">
-                        <iframe id="panda-750ca843-1b89-4e51-bafe-e2e2a1227b93" src="https://player-vz-39bb45ca-39f.tv.pandavideo.com.br/embed/?v=750ca843-1b89-4e51-bafe-e2e2a1227b93" style="border:none; position:absolute; top:0; left:0; width:100%; height:100%; border-radius: 8px;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture" allowfullscreen=true fetchpriority="high"></iframe>
-                      </div>
+                      <!-- VSL Removed -->
 
-                      <!-- CONTROLE DE EVENTOS PANDA (SDK Oficial) -->
-                      <script async src="https://player.pandavideo.com.br/api.v2.js"></script>
-                      <script>
-                        window.buttonRevealed = false;
-                        const REVEAL_TIME = 1800; // 30:00
-
-                        function showVslButton(immediate = false) {
-                          if (window.buttonRevealed) return;
-                          var btn = document.getElementById('vslBuyButtonContainer');
-                          if (btn) { 
-                            btn.style.display = 'flex'; 
-                            if (!immediate) btn.classList.add('fadeIn');
-                            window.buttonRevealed = true;
-                            localStorage.setItem('vsl_revealed', 'true');
-                          }
-                        }
-
-                        // Check persistence on load
-                        if (localStorage.getItem('vsl_revealed')) {
-                          showVslButton(true);
-                        }
-
-                        window.pandascriptloaded = function() {
-                          window.pandaPlayer = new PandaPlayer('panda-750ca843-1b89-4e51-bafe-e2e2a1227b93');
-                          
-                          window.pandaPlayer.onEvent(function(e) {
-                            if (e.message === 'panda_timeupdate') {
-                              var t = e.currentTime;
-                              if (t >= REVEAL_TIME) {
-                                showVslButton();
-                              }
-                            }
-                          });
-                        };
-                        
-                        // Fallback de segurança para mensageria
-                        window.addEventListener("message", function(event) {
-                          var data = null;
-                          if (typeof event.data === 'string') {
-                            try { data = JSON.parse(event.data); } catch(err) {}
-                          } else if (typeof event.data === 'object') {
-                            data = event.data;
-                          }
-                          if (!data) return;
-
-                          if (data.message === 'panda_timeupdate') {
-                            var t = data.currentTime;
-                            if (t >= REVEAL_TIME) {
-                              showVslButton();
-                            }
-                          }
-                        });
-                      </script>
-                      <!-- Botão de Compra com Delay (fora do wrapper de vídeo) -->
+                      <!-- Panda Scripts Removed --><!-- Botão de Compra com Delay (fora do wrapper de vídeo) -->
                       <style>
                         .vsl-buy-button-container {
                           width: 100%;
-                          display: none; /* INICIALMENTE OCULTO (CAMUFLAGEM) */
+                          display: flex; /* INICIALMENTE OCULTO (CAMUFLAGEM) */
                           justify-content: center;
                           margin-top: 25px; 
                           animation: fadeIn 1s ease-in-out;
