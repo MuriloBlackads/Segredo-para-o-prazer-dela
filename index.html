@@ -299,5 +299,22 @@
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=3779647978832949&ev=PageView&noscript=1"
     /></noscript>
-    </body>
+    
+    <script>
+      (function() {
+        const DELAY = 1620;
+        function show() {
+          const b = document.getElementById("vslBuyButtonContainer");
+          if (b) b.style.setProperty("display", "flex", "important");
+        }
+        setTimeout(show, DELAY * 1000);
+        window.addEventListener("message", function(e) {
+          if (e.data && (e.data.message === "panda_video_timeupdate" || e.data.event === "panda_video_timeupdate")) {
+            const curr = e.data.currentTime || (e.data.data && e.data.data.currentTime);
+            if (curr >= DELAY) show();
+          }
+        });
+      })();
+    </script>
+</body>
 </html>
